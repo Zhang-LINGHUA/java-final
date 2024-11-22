@@ -1,0 +1,152 @@
+package Final;
+
+import java.util.Random;
+import java.util.Scanner;
+
+public class sample {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Random random = new Random();
+
+        System.out.println("勇者の名前を入力してください:");
+        String heroName = scanner.nextLine();
+        Character hero = new Character(heroName, 100, 20);
+
+        System.out.println("王様: 勇者" + hero.getName() + "よ、魔王を倒しお姫様を救ってください！");
+        boolean defeatedSlime = false, defeatedGoblin = false, defeatedWerewolf = false;
+        boolean wizardJoined = false;
+        boolean isSuperHero = false;
+
+        while (true) {
+            System.out.println("何をしますか？ 1:冒険する 2:休む 3:終了");
+            int choice = scanner.nextInt();
+
+            if (choice == 1) {
+                // 敵との遭遇
+                if (!isSuperHero) {
+                    int encounter = random.nextInt(3); // スライム、ゴブリン、狼男
+                    if (encounter == 0 && !defeatedSlime) {
+                        defeatedSlime = battle(hero, new Character("スライム", 30, 10), scanner, random);
+                    } else if (encounter == 1 && !defeatedGoblin) {
+                        defeatedGoblin = battle(hero, new Character("ゴブリン", 50, 15), scanner, random);
+                    } else if (encounter == 2 && !defeatedWerewolf) {
+                        defeatedWerewolf = battle(hero, new Character("狼男", 70, 25), scanner, random);
+                    }
+                } else {
+                    Character enemy = random.nextInt(4) == 3
+                            ? new Character("魔王", 200, 50)
+                            : new Character("スライム", 30, 10); // 魔王か他の敵
+                    boolean victory = battle(hero, enemy, scanner, random);
+                    if (enemy.getName().equals("魔王") && victory) {
+                        System.out.println("魔王を倒しました！お姫様を救いました！");
+                        System.out.println("お姫様: 勇者" + hero.getName() + "、ありがとう！");
+                        System.out.println("ゲームクリア！");
+                        break;
+                    }
+                }
+
+                // 魔法使いに遭遇
+                if (!wizardJoined && random.nextInt(100) < 20) { // 20%の確率で登場
+                    System.out.println("魔法使いに出会いました。仲間になりますか？ (1:はい 2:いいえ)");
+                    int decision = scanner.nextInt();
+                    if (decision == 1) {
+                        wizardJoined = true;
+                        System.out.println("魔法使いが仲間になりました！");
+                    } else {
+                        System.out.println("魔法使いは去っていきました...");
+                    }
+                }
+
+                // スーパー勇者に進化
+                if (!isSuperHero && defeatedSlime && defeatedGoblin && defeatedWerewolf && wizardJoined) {
+                    isSuperHero = true;
+                    hero = new Character(hero.getName(), hero.getHp(), hero.getAttackPower() * 2);
+                    System.out.println(hero.getName() + "はスーパー勇者に進化しました！");
+                }
+
+            } else if (choice == 2) {
+                hero.heal();
+            } else {
+                System.out.println("ゲームを終了します。");
+                break;
+            }
+
+            if (hero.getHp() <= 0) {
+                System.out.println("勇者は倒れてしまった...ゲームオーバーです。");
+                break;
+            }
+        }
+
+        scanner.close();
+    }
+
+    public static boolean battle(Character hero, Character enemy, Scanner scanner, Random random) {
+        System.out.println(enemy.getName() + "が現れた！");
+        while (hero.getHp() > 0 && enemy.getHp() > 0) {
+            System.out.println(
+                    hero.getName() + "のHP: " + hero.getHp() + ", " + enemy.getName() + "のHP: " + enemy.getHp());
+            System.out.println("行動を選択してください: 1:攻撃 2:回復 3:逃げる");
+            int action = scanner.nextInt();
+
+            if (action == 1) {
+                int damage = calculateDamage(hero.getAttackPower(), 5, random);
+                enemy.setHp(enemy.getHp() - damage);
+                System.out.println(hero.getName() + "は" + enemy.getName() + "に" + damage + "のダメージを与えた！");
+                if (enemy.getHp() > 0) {
+                    damage = calculateDamage(enemy.getAttackPower(), 5, random);
+                    hero.setHp(hero.getHp() - damage);
+                    System.out.println(enemy.getName() + "は" + hero.getName() + "に" + damage + "のダメージを与えた！");
+                }
+            } else if (action == 2) {
+                hero.heal();
+                int damage = calculateDamage(enemy.getAttackPower(), 5, random);
+                hero.setHp(hero.getHp() - damage);
+                System.out.println(enemy.getName() + "は回復中の" + hero.getName() + "に" + damage + "のダメージを与えた！");
+            } else {
+                System.out.println(hero.getName() + "は戦いから逃げた！");
+                return false;
+            }
+        }
+
+        return enemy.getHp() <= 0;
+    }
+
+    public static int calculateDamage(int baseDamage, int randomRange, Random random) {
+        return baseDamage + random.nextInt(randomRange) + 1;
+    }
+
+    public static class Character {
+        private String name;
+        private int hp;
+        private int maxHp;
+        private int attackPower;
+
+        public Character(String name, int hp, int attackPower) {
+            this.name = name;
+            this.hp = hp;
+            this.maxHp = hp;
+            this.attackPower = attackPower;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getHp() {
+            return hp;
+        }
+
+        public void setHp(int hp) {
+            this.hp = Math.max(0, hp);
+        }
+
+        public int getAttackPower() {
+            return attackPower;
+        }
+
+        public void heal() {
+            this.hp = this.maxHp;
+            System.out.println(name + "はHPを全回復した！");
+        }
+    }
+}
